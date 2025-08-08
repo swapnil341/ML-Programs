@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+
+from google.colab import drive
+drive.mount('/content/drive')
+path = "/content/drive/MyDrive/Dataset.csv"
+
+df = pd.read_csv(path);
+df.head(5)
+
+df_selected = df[['Survived', 'Pclass', 'Age', 'SibSp', 'Parch']]
+display(df_selected.head())
+
+print("DataFrame Info:")
+df_selected.info()
+
+print(df_selected.describe())
+
+print("\nMissing Values Count:")
+print(df_selected.isnull().sum())
+
+print(df_selected.isnull().sum())
+mean_age = df_selected['Age'].mean()
+df_selected['Age'].fillna(mean_age, inplace=True)
+print("Missing values after imputation:")
+print(df_selected.isnull().sum())
+
+print("Data types of df_selected columns:")
+print(df_selected.dtypes)
+
+from sklearn.preprocessing import StandardScaler
+
+numerical_cols = ['Age', 'SibSp', 'Parch']
+scaler = StandardScaler()
+df_selected[numerical_cols] = scaler.fit_transform(df_selected[numerical_cols])
+
+print(df_selected.head())
+
+from sklearn.model_selection import train_test_split
+
+X = df_selected.drop('Survived', axis=1)
+y = df_selected['Survived']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("Shape of X_train:", X_train.shape)
+print("Shape of X_test:", X_test.shape)
+print("Shape of y_train:", y_train.shape)
+print("Shape of y_test:", y_test.shape)
