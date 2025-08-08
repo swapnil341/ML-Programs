@@ -1,0 +1,88 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from google.colab import drive
+drive.mount('/content/drive')
+
+# --- 1. Load Dataset ---
+df = pd.read_csv('/content/drive/MyDrive/ML/housingCalifornia.csv', usecols=['housing_median_age', 'total_rooms', 'total_bedrooms', 'median_house_value'])
+df.head()
+
+# --- 2. Data Exploration and Preprocessing ---
+print("\n--- Data Information ---")
+df.info()
+print("\n--- Missing Values ---")
+print(df.isnull().sum())
+
+# Handle missing values in 'total_bedrooms' by imputing with the median
+median_bedrooms = df['total_bedrooms'].median()
+df['total_bedrooms'].fillna(median_bedrooms, inplace=True)
+print("\n--- Missing Values after Imputation ---")
+print(df.isnull().sum())
+
+# --- 3. Split Data ---
+X = df.drop('median_house_value', axis=1)
+y = df['median_house_value']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print("\n--- Data Split Information ---")
+print(f"Training set size: {X_train.shape[0]}")
+print(f"Testing set size: {X_test.shape[0]}")
+
+# --- 4. Train Linear Regression Model ---
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# --- 5. Make Predictions ---
+y_pred = model.predict(X_test)
+
+# --- 6. Evaluate Model ---
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+print("\n--- Model Evaluation Metrics ---")
+print(f"Mean Squared Error (MSE): {mse:.2f}")
+print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
+print(f"R-squared (R² Score): {r2:.2f}")
+
+# --- 7. Plot Regression Line (for a single feature) ---
+# Use 'total_rooms' as the single feature
+X_single = df[['total_rooms']]
+y_single = df['median_house_value']
+
+# Split the single feature data
+X_train_single, X_test_single, y_train_single, y_test_single = train_test_split(
+    X_single, y_single, test_size=0.2, random_state=42
+)
+
+# Train a new model with the single feature
+single_feature_model = LinearRegression()
+single_feature_model.fit(X_train_single, y_train_single)
+y_pred_single = single_feature_model.predict(X_test_single)
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=y_test_single, y=y_pred_single)
+plt.plot(y_test_single, y_test_single, color='red', linestyle='--')
+plt.title('Regression Line Plot (Actual vs. Predicted Values)')
+plt.xlabel('Actual `median_house_value`')
+plt.ylabel('Predicted `median_house_value`')
+plt.grid(True)
+plt.savefig('regression_line_plot_new.png')
+plt.close()
+
+# --- 8. Plot Residuals ---
+residuals = y_test - y_pred
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=y_pred, y=residuals)
+plt.axhline(y=0, color='red', linestyle='--')
+plt.title('Residual Plot')
+plt.xlabel('Predicted `median_house_value`')
+plt.ylabel('Residuals (Actual - Predicted)')
+plt.grid(True)
+plt.savefig('residuals_plot_new.png')
+#plt.close()
